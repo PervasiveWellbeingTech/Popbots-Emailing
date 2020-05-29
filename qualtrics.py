@@ -13,6 +13,7 @@ import zipfile
 import io, os
 import sys
 import re
+import logging
 from requests.exceptions import HTTPError
 
 
@@ -98,7 +99,7 @@ def exportSurvey(apiToken,surveyId, dataCenter, fileFormat, logger):
 
 def main(logger):
     try:
-      apiToken = os.environ.get("API_TOKEN")
+      apiToken = os.environ.get("QUALTRICS_API_TOKEN")
       dataCenter = os.environ.get("DATA_CENTER")
       surveyId = os.environ.get("SURVEY_ID")
       fileFormat = os.environ.get("FILE_FORMAT")
@@ -117,3 +118,5 @@ def main(logger):
        sys.exit(2)
 
     return exportSurvey(apiToken, surveyId,dataCenter, fileFormat, logger)
+
+
