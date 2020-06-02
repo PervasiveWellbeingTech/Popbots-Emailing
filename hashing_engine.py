@@ -16,6 +16,6 @@ def decrypt(encoded):
 
     cipher = AES.new(secret_key,AES.MODE_ECB) # never use ECB in strong systems 
     decoded_email = cipher.decrypt(base64.b64decode(encoded)).strip()
-    return decoded_email
+    return decoded_email.decode("utf-8") 
 
 
