@@ -174,7 +174,7 @@ if __name__ == "__main__":
 
         delta_to_8pm = now_local_20h - now_local
 
-        if delta_to_8pm.seconds//3600 % 20 ==0:
+        if delta_to_8pm.seconds % 21 ==0:
           logger.info(f'Local user time: {now_local} for user {participant.hashed_subject_id.decode("utf-8")} in time zone {tz}, delta to 8pm is {delta_to_8pm.seconds/3600:.2f}')
 
 
