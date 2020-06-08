@@ -62,32 +62,31 @@ class PARTICIPANT:
         else:
           raise
     
-    def send_weekly(self):
+  def send_weekly(self):
+    receiver_email = decrypt(self.hashed_email)
+    text_category = 'weekly'
+    survey_number = self.nb_sent_weekly
+    hashed_id = self.hashed_subject_id.decode("utf-8")
 
-      receiver_email = decrypt(self.hashed_email)
-      text_category = 'weekly'
-      survey_number = self.nb_sent_weekly
-      hashed_id = self.hashed_subject_id.decode("utf-8")
-
-      attempts = 0
-      
-      while True:
-        attempts+=1
-        try:
-          send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,logger)
-          
-          self.last_weekly_date = datetime.datetime.now(utc)
-          self.nb_sent_weekly +=1
-          return
+    attempts = 0
+    
+    while True:
+      attempts+=1
+      try:
+        send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,logger)
         
-        except BaseException as error:
-          if attempts <= 3:
-            sleep_for = 2 ** (attempts - 1)      
-            logger.error(f"Error while trying to send an email for user {self.hashed_subject_id.decode('utf-8')} attempt number {attempts} error is {error}")
-            sleep(sleep_for)
-            continue
-          else:
-            raise
+        self.last_weekly_date = datetime.datetime.now(utc)
+        self.nb_sent_weekly +=1
+        return
+      
+      except BaseException as error:
+        if attempts <= 3:
+          sleep_for = 2 ** (attempts - 1)      
+          logger.error(f"Error while trying to send an email for user {self.hashed_subject_id.decode('utf-8')} attempt number {attempts} error is {error}")
+          sleep(sleep_for)
+          continue
+        else:
+          raise
 
 
 
