@@ -173,9 +173,10 @@ if __name__ == "__main__":
         now_local_20h = now_local.replace(hour=20, minute=0, second=0, microsecond=0)
 
         delta_to_8pm = now_local_20h - now_local
+        time_to_weekly = now_local-participant.last_weekly_date.astimezone(tz)
 
         if delta_to_8pm.seconds % 21 ==0:
-          logger.info(f'Local user time: {now_local} for user {participant.hashed_subject_id.decode("utf-8")} in time zone {tz}, delta to 8pm is {delta_to_8pm.seconds/3600:.2f}')
+          logger.info(f'Local user time: {now_local} for user {participant.hashed_subject_id.decode("utf-8")} in time zone {tz}, delta to 8pm is {delta_to_8pm.seconds/3600:.2f},delta to weekly is {time_to_weekly.seconds/3600:.2f}')
 
 
         if delta_to_8pm < datetime.timedelta(hours=0): # if passed 20h Local time
