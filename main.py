@@ -32,8 +32,10 @@ class PARTICIPANT:
     self.time_zone = time_zone
     self.last_daily_date = enrollment_date.replace(hour=20, minute=0, second=0, microsecond=0) # pretending it was sent the first day at 8pm
     self.last_weekly_date = enrollment_date.replace(hour=20, minute=0, second=0, microsecond=0) # pretending it was sent the first day at 8pm
+    
     self.nb_sent_daily = 0
     self.nb_sent_weekly = 0
+
 
 
   def send_daily(self):

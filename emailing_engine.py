@@ -1,6 +1,7 @@
 # import the necessary components first
 import os
 import pytz
+import codecs
 import smtplib,ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -13,61 +14,30 @@ utc = pytz.timezone('UTC')
 
 
 def send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,logger):
+
+    send_datetime = datetime.now(utc).isoformat()
+
     # write the plain text part
     if text_category == 'daily':
         subject = "Your Daily Chatbot Survey"
-
-        text = f"""\
-        Dear participant,
-        
-        Thank you for your continued participation in our chatbot study. Please complete today’s daily survey: 
-        https://stanforduniversity.qualtrics.com/jfe/form/SV_aaWggWWTJZ5IYN7?snb={survey_number}&rdate={datetime.now(utc).isoformat()}&hid={hashed_id}
-        
-        For any questions or concerns please contact:
-        Nick Tantivasadakarn nantanic@stanford.edu Phone: 323-613-9774
-        Marco Mora marcom3@stanford.edu Phone: 619-636-7636
-
-        For participant’s rights questions, contact the Administrative Panel on Human Subjects in Medical Research via 1-866-680-2906
-
-        Pervasive Wellbeing Technology Lab
-        Stanford University School of Medicine
-        3155 Porter Drive
-        Palo Alto CA 94304 USA
-
-        """
+        f=codecs.open("email_views/daily.html", 'r')
+        html = f.read().format(**locals())
 
     elif text_category=='weekly':
 
         subject = "Your Weekly Chatbot Survey"
-
-        text = f"""\
-        Dear participant,
-        
-        Thank you for your continued participation in our chatbot study. Please complete today’s weekly survey: 
-        https://stanforduniversity.qualtrics.com/jfe/form/SV_elhTKO1aePDsqAl?snb={survey_number}&rdate={datetime.now(utc).isoformat()}&hid={hashed_id}
-        
-        For any questions or concerns please contact:
-        Nick Tantivasadakarn nantanic@stanford.edu Phone: 323-613-9774
-        Marco Mora marcom3@stanford.edu Phone: 619-636-7636
-
-        For participant’s rights questions, contact the Administrative Panel on Human Subjects in Medical Research via 1-866-680-2906
-
-        Pervasive Wellbeing Technology Lab
-        Stanford University School of Medicine
-        3155 Porter Drive
-        Palo Alto CA 94304 USA
-
-        """
+        f=codecs.open("email_views/weekly.html", 'r')
+        html = f.read().format(**locals())
     else:
         raise Exception("No text category")
 
 
-    send_email(receiver_email,text,subject)
+    send_email(receiver_email,html,subject)
     logger.info(f"Email for user {hashed_id} has been sucessfully sent at {datetime.now(utc)}")
 
 
 
-def send_email(receiver_email,text,subject):
+def send_email(receiver_email,html,subject):
 
     port = 465 
     smtp_server = "smtp.gmail.com"
@@ -86,8 +56,10 @@ def send_email(receiver_email,text,subject):
 
 
     # convert both parts to MIMEText objects and add them to the MIMEMultipart message
-    part1 = MIMEText(text, "plain")
-    message.attach(part1)
+ 
+    part = MIMEText(html, "html")
+    message.attach(part)
+
     # send the email
     with smtplib.SMTP_SSL(smtp_server, port,context=context) as server:
         server.login(login, password)
