@@ -1,15 +1,15 @@
-from utils import return_logger
+import os
 import traceback
 import pickle
 import datetime
-from time import sleep
 import pytz
 import qualtrics
 import pandas
+from time import sleep
+
 
 from emailing_engine import send_qualtrics_email
-import os
-
+from utils import return_logger,save_object, read_object
 from hashing_engine import encrypt,decrypt
 
 logger = return_logger()
@@ -18,8 +18,7 @@ utc = pytz.timezone('UTC')
 
 participants = {}
 
-
-from threading import Timer
+participant_df = pandas.read_csv('data/participant_df.csv')
 
 
 class PARTICIPANT:
@@ -36,6 +35,9 @@ class PARTICIPANT:
     self.nb_sent_daily = 0
     self.nb_sent_weekly = 0
 
+    self.unsubscribe = False
+    self.unsubscribe_dt = None
+    self.unsubscribe_email_sent = False
 
 
   def send_daily(self):
@@ -92,18 +94,6 @@ class PARTICIPANT:
 
 
 
-
-def save_object(obj, filename):
-    with open(filename, 'wb') as output:  # Overwrites any existing file.
-        pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)
-
-
-def read_object(filename):
-  
-  with open(filename, 'rb') as input:
-    return pickle.load(input)
-
-
 def fetch_update_participants():
 
   
@@ -121,10 +111,38 @@ def fetch_update_participants():
 
   for index,response in surveys.iterrows():
 
-    if encrypt(response['id']) not in list(participants.keys()):
+    esID = encrypt(response['id'])
+
+    if esID not in list(participants.keys()):
 
       enrollment_date = datetime.datetime.strptime(response['EndDate'],"%Y-%m-%d %H:%M:%S")
-      participants[encrypt(response['id'])] = PARTICIPANT(enrollment_date,encrypt(response['id']),encrypt(response['Q21']),response['INATZ'])
+      participants[esID] = PARTICIPANT(enrollment_date,esID,encrypt(response['Q21']),response['INATZ'])
+
+      participant_df.loc[esID,enrollment_date.date()] = "ENROLLED" 
+
+
+    else:
+      participant = participants[esID]
+      participants[esID] = PARTICIPANT(participant.enrollment_date,participant.hashed_subject_id,participant.hashed_email,participant.time_zone)
+      refreshed_participant = participants[esID]
+
+      refreshed_participant.last_daily_date = participant.last_daily_date
+      refreshed_participant.last_weekly_date = participant.last_weekly_date
+      refreshed_participant.nb_sent_daily = participant.nb_sent_daily
+      refreshed_participant.nb_sent_weekly = participant.nb_sent_weekly
+      try: # put the default values
+        refreshed_participant.unsubscribe = participant.unsubscribe
+        refreshed_participant.unsubscribe_dt = participant.unsubscribe_dt
+        refreshed_participant.unsubscribe_email_sent = participant.unsubscribe_email_sent
+      except:
+        refreshed_participant.unsubscribe = False
+        refreshed_participant.unsubscribe_dt = None
+        refreshed_participant.unsubscribe_email_sent = False
+
+      participant_df.loc[esID,participant.enrollment_date.date()] = "ENROLLED"
+
+       
+      # updating the participant object, in case (in the code) we actually update the participant object. 
 
   save_object(participants,DATA_PATH)
 
@@ -149,7 +167,7 @@ if __name__ == "__main__":
   logger.info(f"Running the weekly and daily emailing system")
   while True:
 
-    sleep(5)
+    sleep(10)
 
     try:
 
@@ -163,36 +181,55 @@ if __name__ == "__main__":
         pass
 
       for participant in participants.values():
-        
-        
-        tz = pytz.timezone(participant.time_zone)
-        utc = pytz.timezone('UTC')
-        
-        nowUTC = datetime.datetime.now(utc)
-        now_local = nowUTC.astimezone(tz)
 
-        now_local_20h = now_local.replace(hour=20, minute=0, second=0, microsecond=0)
+        try:
+          tz = pytz.timezone(participant.time_zone)
+          utc = pytz.timezone('UTC')
+          
+          nowUTC = datetime.datetime.now(utc)
+          now_local = nowUTC.astimezone(tz)
+          
+          hsID = participant.hashed_subject_id
+          
+          if not participant.unsubscribe:
+    
+            now_local_20h = now_local.replace(hour=20, minute=0, second=0, microsecond=0)
 
-        delta_to_8pm = now_local_20h - now_local
-        time_to_weekly = now_local-participant.last_weekly_date.astimezone(tz)
+            delta_to_8pm = now_local_20h - now_local
+            time_to_weekly = now_local-participant.last_weekly_date.astimezone(tz)
 
-        if delta_to_8pm.seconds % 21 ==0:
-          logger.info(f'Local user time: {now_local} for user {participant.hashed_subject_id.decode("utf-8")} in time zone {tz}, delta to 8pm is {delta_to_8pm.seconds/3600:.2f},delta to weekly is {time_to_weekly.seconds/3600:.2f}')
+            if delta_to_8pm.seconds % 37 ==0:
+              logger.info(f'Local user time: {now_local} for user {hsID.decode("utf-8")} in time zone {tz}, delta to 8pm is {delta_to_8pm.seconds/3600:.2f},delta to weekly is {str(time_to_weekly)}')
 
 
-        if delta_to_8pm < datetime.timedelta(hours=0): # if passed 20h Local time
+            if delta_to_8pm < datetime.timedelta(hours=0): # if passed 20h Local time
 
-          if (now_local - participant.last_daily_date.astimezone(tz)) > datetime.timedelta(hours=20): # if time is greater than yesterday
-            logger.info(f"Daily will be send now for participant {decrypt(participant.hashed_email)}")
+              if now_local-participant.last_weekly_date.astimezone(tz) > datetime.timedelta(days=7):
+                logger.info(f"Weekly will be send now for participant {decrypt(participant.hashed_email)}")
 
-            participant.send_daily()
-            participant.last_daily_date = datetime.datetime.now(utc)
+                participant.send_weekly()
+                participant.last_weekly_date = datetime.datetime.now(utc)
+                participant.last_daily_date = datetime.datetime.now(utc) # we are bypassing the daily
+                participant_df.loc[hsID,nowUTC.date()] = "WEEKLY "+ str(participant.nb_sent_weekly)
+              
+              elif (now_local - participant.last_daily_date.astimezone(tz)) > datetime.timedelta(hours=20): # if time is greater than yesterday
+              
+                logger.info(f"Daily will be send now for participant {decrypt(participant.hashed_email)}")
 
-          if now_local-participant.last_weekly_date.astimezone(tz) > datetime.timedelta(days=7):
-            logger.info(f"Weekly will be send now for participant {decrypt(participant.hashed_email)}")
+                participant.send_daily()
+                participant.last_daily_date = datetime.datetime.now(utc)
+                participant_df.loc[hsID,nowUTC.date()] = "DAILY "+ str(participant.nb_sent_daily)
+          else:
+            pass
 
-            participant.send_weekly()
-            participant.last_weekly_date = datetime.datetime.now(utc)
+
+        except BaseException as error:
+          logger.error(f"Error for participant {hsID} error is {error}")
+          participant_df.loc[hsID,nowUTC.date()] = "ERROR"
+          
+
+
+            
 
 
     except BaseException as error:
@@ -203,6 +240,8 @@ if __name__ == "__main__":
     finally:
 
       save_object(participants,DATA_PATH)
+      participant_df.to_csv('./data/participant_df.csv')
+
 
 
 

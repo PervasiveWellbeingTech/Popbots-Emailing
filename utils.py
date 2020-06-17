@@ -1,4 +1,6 @@
 import logging
+import pickle
+
 
 def return_logger():
     logger = logging.getLogger(__name__)
@@ -22,3 +24,12 @@ def return_logger():
     return logger
 
 
+def save_object(obj, filename):
+    with open(filename, 'wb') as output:  # Overwrites any existing file.
+        pickle.dump(obj, output, pickle.HIGHEST_PROTOCOL)
+
+
+def read_object(filename):
+  
+  with open(filename, 'rb') as input:
+    return pickle.load(input)
