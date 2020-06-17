@@ -118,7 +118,7 @@ def fetch_update_participants():
       enrollment_date = datetime.datetime.strptime(response['EndDate'],"%Y-%m-%d %H:%M:%S")
       participants[esID] = PARTICIPANT(enrollment_date,esID,encrypt(response['Q21']),response['INATZ'])
 
-      participant_df.loc[esID,enrollment_date.date()] = "ENROLLED" 
+      participant_df.loc[esID.decode("utf-8"),enrollment_date.date()] = "ENROLLED" 
 
 
     else:
@@ -139,7 +139,7 @@ def fetch_update_participants():
         refreshed_participant.unsubscribe_dt = None
         refreshed_participant.unsubscribe_email_sent = False
 
-      participant_df.loc[esID,participant.enrollment_date.date()] = "ENROLLED"
+      participant_df.loc[esID.decode("utf-8"),participant.enrollment_date.date()] = "ENROLLED"
 
        
       # updating the participant object, in case (in the code) we actually update the participant object. 
@@ -210,7 +210,7 @@ if __name__ == "__main__":
                 participant.send_weekly()
                 participant.last_weekly_date = datetime.datetime.now(utc)
                 participant.last_daily_date = datetime.datetime.now(utc) # we are bypassing the daily
-                participant_df.loc[hsID,nowUTC.date()] = "WEEKLY "+ str(participant.nb_sent_weekly)
+                participant_df.loc[hsID.decode("utf-8"),nowUTC.date()] = "WEEKLY "+ str(participant.nb_sent_weekly)
               
               elif (now_local - participant.last_daily_date.astimezone(tz)) > datetime.timedelta(hours=20): # if time is greater than yesterday
               
@@ -218,14 +218,14 @@ if __name__ == "__main__":
 
                 participant.send_daily()
                 participant.last_daily_date = datetime.datetime.now(utc)
-                participant_df.loc[hsID,nowUTC.date()] = "DAILY "+ str(participant.nb_sent_daily)
+                participant_df.loc[hsID.decode("utf-8"),nowUTC.date()] = "DAILY "+ str(participant.nb_sent_daily)
           else:
             pass
 
 
         except BaseException as error:
           logger.error(f"Error for participant {hsID} error is {error}")
-          participant_df.loc[hsID,nowUTC.date()] = "ERROR"
+          participant_df.loc[hsID.decode("utf-8"),nowUTC.date()] = "ERROR"
           
 
 
