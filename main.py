@@ -226,7 +226,7 @@ if __name__ == "__main__":
             time_to_weekly = now_local-participant.last_weekly_date.astimezone(tz)
 
             if delta_to_8pm.seconds % 37 ==0:
-              logger.info(f'Local user time: {now_local} for user {hsID.decode("utf-8")} in time zone {tz}, delta to 8pm is {delta_to_8pm.seconds/3600:.2f},delta to weekly is {str(time_to_weekly)}')
+              logger.info(f'Local user time: {now_local} for user {hsID.decode("utf-8")} in time zone {tz}, delta to 8pm is {delta_to_8pm.seconds/3600:.2f},delta to weekly is {str(time_to_weekly)}, enrolled since {str(now_local - participant.enrollment_date.astimezone(tz))}')
 
 
             if delta_to_8pm < datetime.timedelta(hours=0): # if passed 20h Local time
@@ -273,7 +273,7 @@ if __name__ == "__main__":
                   logger.info(f"Unsubscribed email will be send now for participant {hsID}, participant unsubscribed")
 
             if nowUTC.hour % 10 == 0 and nowUTC.minute % 31 == 0: # print 3 times a day 0h , 10h, 20h , 31 min is a co-prime integer 
-              logger.info(f"Unsubscribed participant {hsID}")
+              logger.info(f"Participant {hsID} is unsubscribed")
 
         except BaseException as error:
           logger.error(f"Error for participant {hsID} error is {error}")
