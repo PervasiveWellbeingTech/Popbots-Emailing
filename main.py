@@ -232,21 +232,18 @@ if __name__ == "__main__":
             if delta_to_8pm < datetime.timedelta(hours=0): # if passed 20h Local time
 
               if (now_local - participant.enrollment_date.astimezone(tz)) > datetime.timedelta(days=STUDY_DURATION_DAYS):
-                
-                
-                if not participant.unsubscribe_email_sent: # this should never occur
-                  
-                  logger.info(f"Final email will be send now for participant {participant.hsID}, participant unsubscribed")
-                  participant.send_final('final')
-                  participant.unsubscribe = True
-                  participant.unsubscribe_dt = nowUTC
-                  participant.unsubscribe_email_sent = True
-                  participant.unsubscribe_email_dt = nowUTC
-                  participant_df.loc[hsID.decode("utf-8"),nowUTC.date()] = "STUDY END"
+
+                logger.info(f"Final email will be send now for participant {hsID}, participant unsubscribed")
+                participant.send_final('final')
+                participant.unsubscribe = True
+                participant.unsubscribe_dt = nowUTC
+                participant.unsubscribe_email_sent = True
+                participant.unsubscribe_email_dt = nowUTC
+                participant_df.loc[hsID.decode("utf-8"),nowUTC.date()] = "STUDY END"
 
 
               elif now_local-participant.last_weekly_date.astimezone(tz) > datetime.timedelta(days=7):
-                logger.info(f"Weekly will be send now for participant {participant.hsID}")
+                logger.info(f"Weekly will be send now for participant {hsID}")
 
                 participant.send_weekly()
                 participant.last_weekly_date = nowUTC
@@ -255,7 +252,7 @@ if __name__ == "__main__":
               
               elif (now_local - participant.last_daily_date.astimezone(tz)) > datetime.timedelta(hours=24): # if time is greater than yesterday
               
-                logger.info(f"Daily will be send now for participant {participant.hsID}")
+                logger.info(f"Daily will be send now for participant {hsID}")
 
                 participant.send_daily()
                 participant.last_daily_date = nowUTC
@@ -273,7 +270,10 @@ if __name__ == "__main__":
                   participant.unsubscribe_email_sent = True
                   participant.unsubscribe_email_dt = nowUTC
                   participant_df.loc[hsID.decode("utf-8"),nowUTC.date()] = "UNSUBSCRIBED"
-                  logger.info(f"Unsubscribed email will be send now for participant {participant.hsID}, participant unsubscribed")
+                  logger.info(f"Unsubscribed email will be send now for participant {hsID}, participant unsubscribed")
+
+            if nowUTC.hour % 10 == 0 and nowUTC.minute % 31 == 0: # print 3 times a day 0h , 10h, 20h , 31 min is a co-prime integer 
+              logger.info(f"Unsubscribed participant {hsID}")
 
         except BaseException as error:
           logger.error(f"Error for participant {hsID} error is {error}")
