@@ -41,10 +41,9 @@ class PARTICIPANT:
     self.unsubscribe_email_dt = None
 
 
-  def send_daily(self):
+  def send_email(self,text_category,survey_number):
+    
     receiver_email = decrypt(self.hashed_email)
-    text_category = 'daily'
-    survey_number = self.nb_sent_daily
     hashed_id = self.hashed_subject_id.decode("utf-8")
 
     attempts = 0
@@ -53,71 +52,17 @@ class PARTICIPANT:
       attempts+=1
       try:
         send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,logger)
-        
-        self.last_daily_date = datetime.datetime.now(utc)
-        self.nb_sent_daily +=1
+                
         return
       
       except BaseException as error:
         if attempts <= 3:
+
           sleep_for = 2 ** (attempts - 1)      
           logger.error(f"Error while trying to send an email for user {self.hashed_subject_id.decode('utf-8')} attempt number {attempts} error is {error}")
           sleep(sleep_for)
           continue
-        else:
-          raise
-    
-  def send_weekly(self):
-    receiver_email = decrypt(self.hashed_email)
-    text_category = 'weekly'
-    survey_number = self.nb_sent_weekly
-    hashed_id = self.hashed_subject_id.decode("utf-8")
 
-    attempts = 0
-    
-    while True:
-      attempts+=1
-      try:
-        send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,logger)
-        
-        self.last_weekly_date = datetime.datetime.now(utc)
-        self.nb_sent_weekly +=1
-        return
-      
-      except BaseException as error:
-        if attempts <= 3:
-          sleep_for = 2 ** (attempts - 1)      
-          logger.error(f"Error while trying to send an email for user {self.hashed_subject_id.decode('utf-8')} attempt number {attempts} error is {error}")
-          sleep(sleep_for)
-          continue
-        else:
-          raise
-  
-  def send_final(self,text_category):
-    
-    receiver_email = decrypt(self.hashed_email)
-    hashed_id = self.hashed_subject_id.decode("utf-8")
-    survey_number = None
-    attempts = 0
-    
-    while True:
-      attempts+=1
-      try:
-        send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,logger)
-        
-        self.unsubscribe_email_dt = datetime.datetime.now(utc)
-        self.unsubscribe_email_sent = True
-        
-
-
-        return
-      
-      except BaseException as error:
-        if attempts <= 3:
-          sleep_for = 2 ** (attempts - 1)      
-          logger.error(f"Error while trying to send an email for user {self.hashed_subject_id.decode('utf-8')} attempt number {attempts} error is {error}")
-          sleep(sleep_for)
-          continue
         else:
           raise
 
@@ -146,7 +91,6 @@ def fetch_update_participants():
 
       enrollment_date = datetime.datetime.strptime(response['EndDate'],"%Y-%m-%d %H:%M:%S")
       participants[esID] = PARTICIPANT(enrollment_date,esID,encrypt(response['Q21']),response['INATZ'])
-
       participant_df.loc[esID.decode("utf-8"),enrollment_date.date()] = "ENROLLED" 
 
 
@@ -195,7 +139,7 @@ if __name__ == "__main__":
   while True:
 
     sleep(10)
-
+    
     try:
 
       #1 retrieve all new possible users
@@ -234,29 +178,32 @@ if __name__ == "__main__":
               if (now_local - participant.enrollment_date.astimezone(tz)) > datetime.timedelta(days=STUDY_DURATION_DAYS):
 
                 logger.info(f"Final email will be send now for participant {hsID}, participant unsubscribed")
-                participant.send_final('final')
+                participant.send_final('final',None)
                 participant.unsubscribe = True
                 participant.unsubscribe_dt = nowUTC
                 participant.unsubscribe_email_sent = True
                 participant.unsubscribe_email_dt = nowUTC
-                participant_df.loc[hsID.decode("utf-8"),nowUTC.date()] = "STUDY END"
+                participant_df.loc[hsID.decode("utf-8"),str(nowUTC.date())] = "STUDY END"
 
 
               elif now_local-participant.last_weekly_date.astimezone(tz) > datetime.timedelta(days=7):
                 logger.info(f"Weekly will be send now for participant {hsID}")
 
-                participant.send_weekly()
+                participant.send_email('weekly',participant.nb_sent_weekly)
                 participant.last_weekly_date = nowUTC
-                participant.last_daily_date = nowUTC # we are bypassing the daily
-                participant_df.loc[hsID.decode("utf-8"),nowUTC.date()] = "WEEKLY "+ str(participant.nb_sent_weekly)
+                participant.last_daily_date = nowUTC # we are bypassing the daily                
+                participant_df.loc[hsID.decode("utf-8"),str(nowUTC.date())] = "WEEKLY "+ str(participant.nb_sent_weekly)
+                participant.nb_sent_weekly +=1
               
               elif (now_local - participant.last_daily_date.astimezone(tz)) > datetime.timedelta(hours=24): # if time is greater than yesterday
               
                 logger.info(f"Daily will be send now for participant {hsID}")
 
-                participant.send_daily()
+                participant.send_email('daily',participant.nb_sent_daily)
                 participant.last_daily_date = nowUTC
-                participant_df.loc[hsID.decode("utf-8"),nowUTC.date()] = "DAILY "+ str(participant.nb_sent_daily)
+                participant_df.loc[hsID.decode("utf-8"),str(nowUTC.date())] = "DAILY "+ str(participant.nb_sent_daily)
+                participant.nb_sent_daily +=1
+
 
           else: # this else occurs if the participant was unsubscribed from the study by the admin
             
@@ -264,12 +211,12 @@ if __name__ == "__main__":
             if not (now_local - participant.enrollment_date.astimezone(tz)) > datetime.timedelta(days=STUDY_DURATION_DAYS):
               if not participant.unsubscribe_email_sent:
                   
-                  participant.send_final('unsubscribed')
+                  participant.send_final('unsubscribed',None)
                   participant.unsubscribe = True #
                   participant.unsubscribe_dt = nowUTC
                   participant.unsubscribe_email_sent = True
                   participant.unsubscribe_email_dt = nowUTC
-                  participant_df.loc[hsID.decode("utf-8"),nowUTC.date()] = "UNSUBSCRIBED"
+                  participant_df.loc[hsID.decode("utf-8"),str(nowUTC.date())] = "UNSUBSCRIBED"
                   logger.info(f"Unsubscribed email will be send now for participant {hsID}, participant unsubscribed")
 
             if nowUTC.hour % 10 == 0 and nowUTC.minute % 31 == 0: # print 3 times a day 0h , 10h, 20h , 31 min is a co-prime integer 
@@ -277,7 +224,7 @@ if __name__ == "__main__":
 
         except BaseException as error:
           logger.error(f"Error for participant {hsID} error is {error}")
-          participant_df.loc[hsID.decode("utf-8"),nowUTC.date()] = "ERROR"
+          participant_df.loc[hsID.decode("utf-8"),str(nowUTC.date())] = "ERROR"
           
 
 
