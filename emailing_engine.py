@@ -19,6 +19,7 @@ def send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,lo
 
     # write the plain text part
     if text_category == 'daily':
+        
         subject = "Your Daily Chatbot Survey"
         f=codecs.open("email_views/daily.html", 'r')
         html = f.read().format(**locals())
@@ -27,6 +28,18 @@ def send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,lo
 
         subject = "Your Weekly Chatbot Survey"
         f=codecs.open("email_views/weekly.html", 'r')
+        html = f.read().format(**locals())
+    
+    elif text_category == 'final':
+        
+        subject = "Post-Chatbot Study Survey"
+        f=codecs.open('email_views/endStudy.html')
+        html = f.read().format(**locals())
+
+    elif text_category== 'unsubscribed':
+        
+        subject = "Unsubscribed from Chatbot Study"
+        f=codecs.open("email_views/unsubscribed.html", 'r')
         html = f.read().format(**locals())
     else:
         raise Exception("No text category")
