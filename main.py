@@ -168,7 +168,7 @@ if __name__ == "__main__":
             now_local_20h = now_local.replace(hour=20, minute=0, second=0, microsecond=0)
 
             delta_to_8pm = now_local_20h - now_local
-            time_to_weekly = now_local-participant.last_weekly_date.astimezone(tz)
+            time_to_weekly = datetime.timedelta(days=7) - participant.last_weekly_date.astimezone(tz)
 
             if delta_to_8pm.seconds % 37 ==0:
               logger.info(f'Local user time: {now_local} for user {hsID.decode("utf-8")} in time zone {tz}, delta to 8pm is {delta_to_8pm.seconds/3600:.2f},delta to weekly is {str(time_to_weekly)}, enrolled since {str(now_local - participant.enrollment_date.astimezone(tz))}')
@@ -187,7 +187,7 @@ if __name__ == "__main__":
                 participant_df.loc[hsID.decode("utf-8"),str(nowUTC.date())] = "STUDY END"
 
 
-              elif time_to_weekly > datetime.timedelta(days=7):
+              elif time_to_weekly < datetime.timedelta(minutes=1):
                 logger.info(f"Weekly will be send now for participant {hsID}")
 
                 participant.send_email('weekly',participant.nb_sent_weekly)
@@ -196,7 +196,7 @@ if __name__ == "__main__":
                 participant_df.loc[hsID.decode("utf-8"),str(nowUTC.date())] = "WEEKLY "+ str(participant.nb_sent_weekly)
                 participant.nb_sent_weekly +=1
               
-              elif (now_local - participant.last_daily_date.astimezone(tz)) > datetime.timedelta(hours=24) and time_to_weekly > datetime.timedelta(hours=24): # if time is greater than yesterday
+              elif (now_local - participant.last_daily_date.astimezone(tz)) > datetime.timedelta(hours=24) and time_to_weekly > datetime.timedelta(hours=23): # if time is greater than yesterday
               
                 logger.info(f"Daily will be send now for participant {hsID}")
 
