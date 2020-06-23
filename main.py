@@ -163,6 +163,7 @@ if __name__ == "__main__":
           hsID = participant.hashed_subject_id
           
           if not participant.unsubscribe:
+            
     
             now_local_20h = now_local.replace(hour=20, minute=0, second=0, microsecond=0)
 
@@ -186,21 +187,21 @@ if __name__ == "__main__":
                 participant_df.loc[hsID.decode("utf-8"),str(nowUTC.date())] = "STUDY END"
 
 
-              elif now_local-participant.last_weekly_date.astimezone(tz) > datetime.timedelta(days=7):
+              elif time_to_weekly > datetime.timedelta(days=7):
                 logger.info(f"Weekly will be send now for participant {hsID}")
 
                 participant.send_email('weekly',participant.nb_sent_weekly)
-                participant.last_weekly_date = nowUTC
-                participant.last_daily_date = nowUTC # we are bypassing the daily                
+                participant.last_weekly_date = now_local_20h.astimezone(utc)
+                participant.last_daily_date = now_local_20h.astimezone(utc) # we are bypassing the daily                
                 participant_df.loc[hsID.decode("utf-8"),str(nowUTC.date())] = "WEEKLY "+ str(participant.nb_sent_weekly)
                 participant.nb_sent_weekly +=1
               
-              elif (now_local - participant.last_daily_date.astimezone(tz)) > datetime.timedelta(hours=24): # if time is greater than yesterday
+              elif (now_local - participant.last_daily_date.astimezone(tz)) > datetime.timedelta(hours=24) and time_to_weekly > datetime.timedelta(hours=24): # if time is greater than yesterday
               
                 logger.info(f"Daily will be send now for participant {hsID}")
 
                 participant.send_email('daily',participant.nb_sent_daily)
-                participant.last_daily_date = nowUTC
+                participant.last_daily_date = now_local_20h.astimezone(utc)
                 participant_df.loc[hsID.decode("utf-8"),str(nowUTC.date())] = "DAILY "+ str(participant.nb_sent_daily)
                 participant.nb_sent_daily +=1
 
@@ -237,7 +238,7 @@ if __name__ == "__main__":
     finally:
 
       save_object(participants,DATA_PATH)
-      participant_df.to_csv('./data/participant_df.csv')
+      participant_df.to_csv('./data/participant_df.csv', index = False)
 
 
 
