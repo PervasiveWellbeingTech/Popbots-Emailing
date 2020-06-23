@@ -168,7 +168,7 @@ if __name__ == "__main__":
             now_local_20h = now_local.replace(hour=20, minute=0, second=0, microsecond=0)
 
             delta_to_8pm = now_local_20h - now_local
-            time_to_weekly = datetime.timedelta(days=7) - participant.last_weekly_date.astimezone(tz)
+            time_to_weekly = datetime.timedelta(days=7) - (now_local_20h-participant.last_weekly_date.astimezone(tz))
 
             if delta_to_8pm.seconds % 37 ==0:
               logger.info(f'Local user time: {now_local} for user {hsID.decode("utf-8")} in time zone {tz}, delta to 8pm is {delta_to_8pm.seconds/3600:.2f},delta to weekly is {str(time_to_weekly)}, enrolled since {str(now_local - participant.enrollment_date.astimezone(tz))}')
