@@ -6,7 +6,7 @@ import smtplib,ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
-
+import urllib.parse
 
 
 utc = pytz.timezone('UTC')
@@ -15,7 +15,8 @@ utc = pytz.timezone('UTC')
 
 def send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,logger):
 
-    send_datetime = datetime.now(utc).isoformat()
+    send_datetime = urllib.parse.quote(datetime.now(utc).isoformat())
+    hashed_id = urllib.parse.quote(hashed_id)
 
     # write the plain text part
     if text_category == 'daily':
