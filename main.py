@@ -187,7 +187,7 @@ if __name__ == "__main__":
                 participant_df.loc[hsID.decode("utf-8"),str(nowUTC.date())] = "STUDY END"
 
 
-              elif time_to_weekly < datetime.timedelta(minutes=1):
+              elif time_to_weekly < datetime.timedelta(hours = 5):
                 logger.info(f"Weekly will be send now for participant {hsID}")
 
                 participant.send_email('weekly',participant.nb_sent_weekly)
@@ -196,7 +196,7 @@ if __name__ == "__main__":
                 participant_df.loc[hsID.decode("utf-8"),str(nowUTC.date())] = "WEEKLY "+ str(participant.nb_sent_weekly)
                 participant.nb_sent_weekly +=1
               
-              elif (now_local - participant.last_daily_date.astimezone(tz)) > datetime.timedelta(hours=24) and time_to_weekly > datetime.timedelta(hours=4): # if time is greater than yesterday
+              elif (now_local - participant.last_daily_date.astimezone(tz)) > datetime.timedelta(hours=24) and time_to_weekly > datetime.timedelta(hours=5): # if time is greater than yesterday
               
                 logger.info(f"Daily will be send now for participant {hsID}")
 
