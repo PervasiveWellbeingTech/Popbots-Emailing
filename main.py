@@ -17,13 +17,11 @@ utc = pytz.timezone('UTC')
 
 
 participants = {}
-
-participant_df = pandas.read_csv('data/participant_df.csv')
-
+participant_df = pandas.read_csv('data/participant_df.csv', index_col=0)
 
 class PARTICIPANT:
   
-  def __init__(self,enrollment_date,hashed_subject_id,hashed_email,time_zone):
+  def __init__(self,enrollment_date,hashed_subject_id,hashed_email,time_zone,population):
     
     self.enrollment_date = enrollment_date
     self.hashed_subject_id = hashed_subject_id
@@ -31,7 +29,8 @@ class PARTICIPANT:
     self.time_zone = time_zone
     self.last_daily_date = enrollment_date.replace(hour=20, minute=0, second=0, microsecond=0) # pretending it was sent the first day at 8pm
     self.last_weekly_date = enrollment_date.replace(hour=20, minute=0, second=0, microsecond=0) # pretending it was sent the first day at 8pm
-    
+    self.population = population
+
     self.nb_sent_daily = 0
     self.nb_sent_weekly = 0
 
@@ -51,7 +50,7 @@ class PARTICIPANT:
     while True:
       attempts+=1
       try:
-        send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,logger)
+        send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,self.population,logger)
                 
         return
       
@@ -90,13 +89,13 @@ def fetch_update_participants():
     if esID not in list(participants.keys()):
 
       enrollment_date = datetime.datetime.strptime(response['EndDate'],"%Y-%m-%d %H:%M:%S")
-      participants[esID] = PARTICIPANT(enrollment_date,esID,encrypt(response['Q21']),response['INATZ'])
-      participant_df.loc[esID.decode("utf-8"),enrollment_date.date()] = "ENROLLED" 
+      participants[esID] = PARTICIPANT(enrollment_date,esID,encrypt(response['Q21']),response['INATZ'],response.get(key='population',default='control'))
+      participant_df.loc[esID.decode("utf-8"),str(enrollment_date.date())] = "ENROLLED" 
 
 
     else:
       participant = participants[esID]
-      participants[esID] = PARTICIPANT(participant.enrollment_date,participant.hashed_subject_id,participant.hashed_email,participant.time_zone)
+      participants[esID] = PARTICIPANT(participant.enrollment_date,participant.hashed_subject_id,participant.hashed_email,participant.time_zone,getattr(participant, "population", "test"))
       refreshed_participant = participants[esID]
 
       refreshed_participant.last_daily_date = participant.last_daily_date
@@ -110,7 +109,7 @@ def fetch_update_participants():
       refreshed_participant.unsubscribe_email_dt = getattr(participant, "unsubscribe_email_dt", None)
  
 
-      participant_df.loc[esID.decode("utf-8"),participant.enrollment_date.date()] = "ENROLLED"
+      participant_df.loc[esID.decode("utf-8"),str(participant.enrollment_date.date())] = "ENROLLED"
 
        
       # updating the participant object, in case (in the code) we actually update the participant object. 
@@ -145,6 +144,8 @@ if __name__ == "__main__":
       #1 retrieve all new possible users
 
       if (datetime.datetime.now() - last_participant_update).seconds > 1200:
+        todays_loc = participant_df.columns.get_loc(str(datetime.datetime.now().date()))
+        print(participant_df.iloc[:,todays_loc-4:todays_loc+4])
         logger.info('Participants dict updated and saved')
         participants = fetch_update_participants()
         last_participant_update = datetime.datetime.now()
@@ -234,11 +235,12 @@ if __name__ == "__main__":
       
       error_traceback = error.__traceback__
       logger.error(str(error) + str(''.join(traceback.format_tb(error_traceback))))
+      participant_df.loc[:,str(datetime.datetime.now().date())] = "ERROR"
     
     finally:
 
       save_object(participants,DATA_PATH)
-      participant_df.to_csv('./data/participant_df.csv', index = False)
+      participant_df.to_csv('./data/participant_df.csv', index = True)
 
 
 

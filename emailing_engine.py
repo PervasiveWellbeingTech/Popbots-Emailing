@@ -13,7 +13,7 @@ utc = pytz.timezone('UTC')
         
 
 
-def send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,logger):
+def send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,population,logger):
 
     send_datetime = urllib.parse.quote(datetime.now(utc).isoformat())
     hashed_id = urllib.parse.quote(hashed_id)
@@ -21,25 +21,51 @@ def send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,lo
     # write the plain text part
     if text_category == 'daily':
         
-        subject = "Your Daily Chatbot Survey"
+        if population == 'test':
+            subject = "Your Daily Chatbot Survey"
+            url = f"https://stanforduniversity.qualtrics.com/jfe/form/SV_aaWggWWTJZ5IYN7?snb={survey_number}&rdate={send_datetime}&hid={hashed_id}"
+        else:
+            subject = "Your Daily Stress Survey"
+            url = f"https://stanforduniversity.qualtrics.com/jfe/form/SV_aaWggWWTJZ5IYN7?snb={survey_number}&rdate={send_datetime}&hid={hashed_id}"
+
         f=codecs.open("email_views/daily.html", 'r')
         html = f.read().format(**locals())
 
-    elif text_category=='weekly':
+    elif text_category=='weekly': # Verification needed
 
-        subject = "Your Weekly Chatbot Survey"
+        
+        if population == 'test':
+            subject = "Your Weekly Chatbot Survey"
+            url = f"https://stanforduniversity.qualtrics.com/jfe/form/SV_elhTKO1aePDsqAl?snb={survey_number}&rdate={send_datetime}&hid={hashed_id}"
+        else:
+            subject = "Your Weekly Chatbot Survey"
+            url = f"https://stanforduniversity.qualtrics.com/jfe/form/SV_6gmpusDDaeCxfp3?snb={survey_number}&rdate={send_datetime}&hid={hashed_id}"
         f=codecs.open("email_views/weekly.html", 'r')
         html = f.read().format(**locals())
     
     elif text_category == 'final':
         
-        subject = "Post-Chatbot Study Survey"
+        if population == 'test':
+            subject = "Post-Chatbot Study Survey"
+            url = f"https://stanforduniversity.qualtrics.com/jfe/form/SV_eJRT1I19FFCgDAh?rdate={send_datetime}&hid={hashed_id}" 
+        else:
+            
+            subject = "Post Stress Study Survey"
+            url = f"https://stanforduniversity.qualtrics.com/jfe/form/SV_eJKGuZHsv1S7Uy1?rdate={send_datetime}&hid={hashed_id}"
+        
         f=codecs.open('email_views/endStudy.html')
         html = f.read().format(**locals())
 
     elif text_category== 'unsubscribed':
+
+        if population == 'test':
+            subject = "Unsubscribed from Chatbot Study"
+            url = f"https://stanforduniversity.qualtrics.com/jfe/form/SV_eJRT1I19FFCgDAh?rdate={send_datetime}&hid={hashed_id}" 
+        else:
+            
+            subject = "Unsubscribed from Stress Study"
+            url = f"https://stanforduniversity.qualtrics.com/jfe/form/SV_eJKGuZHsv1S7Uy1?rdate={send_datetime}&hid={hashed_id}"        
         
-        subject = "Unsubscribed from Chatbot Study"
         f=codecs.open("email_views/unsubscribed.html", 'r')
         html = f.read().format(**locals())
     else:
