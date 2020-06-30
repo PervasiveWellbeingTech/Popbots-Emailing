@@ -180,7 +180,7 @@ if __name__ == "__main__":
               if (now_local - participant.enrollment_date.astimezone(tz)) > datetime.timedelta(days=STUDY_DURATION_DAYS):
 
                 logger.info(f"Final email will be send now for participant {hsID}, participant unsubscribed")
-                participant.send_final('final',None)
+                participant.send_email('final',None)
                 participant.unsubscribe = True
                 participant.unsubscribe_dt = nowUTC
                 participant.unsubscribe_email_sent = True
@@ -213,7 +213,7 @@ if __name__ == "__main__":
             if not (now_local - participant.enrollment_date.astimezone(tz)) > datetime.timedelta(days=STUDY_DURATION_DAYS):
               if not participant.unsubscribe_email_sent:
                   
-                  participant.send_final('unsubscribed',None)
+                  participant.send_email('unsubscribed',None)
                   participant.unsubscribe = True #
                   participant.unsubscribe_dt = nowUTC
                   participant.unsubscribe_email_sent = True
@@ -228,7 +228,6 @@ if __name__ == "__main__":
           logger.error(f"Error for participant {hsID} error is {error}")
           participant_df.loc[hsID.decode("utf-8"),str(nowUTC.date())] = "ERROR"
           
-
 
             
     except BaseException as error:
