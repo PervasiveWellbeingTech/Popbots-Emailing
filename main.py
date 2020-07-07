@@ -15,6 +15,7 @@ from hashing_engine import encrypt,decrypt
 logger = return_logger()
 utc = pytz.timezone('UTC')
 
+pandas.set_option("display.max_rows", None, "display.max_columns", None)
 
 participants = {}
 participant_df = pandas.read_csv('data/participant_df.csv', index_col=0)
@@ -81,6 +82,7 @@ def fetch_update_participants():
   surveys = pandas.read_csv(TEMP_QUALTRICS_DATA)
   surveys = surveys.loc[2:] # only take data from row 2 
   surveys = surveys[surveys['Finished']=='1'] # only consider surveys which are completed
+  surveys = surveys[surveys['Q1'] == "YES, I consent."]
 
   for index,response in surveys.iterrows():
 
@@ -145,7 +147,7 @@ if __name__ == "__main__":
 
       if (datetime.datetime.now() - last_participant_update).seconds > 1200:
         todays_loc = participant_df.columns.get_loc(str(datetime.datetime.now().date()))
-        print(participant_df.iloc[:,todays_loc-4:todays_loc+4])
+        print(participant_df.iloc[:,todays_loc-4:todays_loc])
         logger.info('Participants dict updated and saved')
         participants = fetch_update_participants()
         last_participant_update = datetime.datetime.now()
