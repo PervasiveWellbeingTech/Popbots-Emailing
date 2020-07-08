@@ -130,9 +130,9 @@ def fetch_update_participants():
 if __name__ == "__main__":
 
 
-  STUDY_DURATION_DAYS = 28
+  STUDY_DURATION_DAYS = 8
   DATA_PATH = "data/participants.pkl"
-  TEMP_QUALTRICS_DATA = "qualtrics_survey/PopBots June 2020- Pre-Study Survey.csv"
+  TEMP_QUALTRICS_DATA = "qualtrics_survey/PopBots - Pre-Study Survey.csv"
 
   participants = fetch_update_participants() # initializes the participants
   last_participant_update = datetime.datetime.now()
@@ -199,7 +199,7 @@ if __name__ == "__main__":
                 participant_df.loc[hsID.decode("utf-8"),str(nowUTC.date())] = "WEEKLY "+ str(participant.nb_sent_weekly)
                 participant.nb_sent_weekly +=1
               
-              elif (now_local - participant.last_daily_date.astimezone(tz)) > datetime.timedelta(hours=24) and time_to_weekly > datetime.timedelta(hours=5): # if time is greater than yesterday
+              elif (now_local - participant.last_daily_date.astimezone(tz)) > datetime.timedelta(hours=20) and time_to_weekly > datetime.timedelta(hours=5): # if time is greater than yesterday
               
                 logger.info(f"Daily will be send now for participant {hsID}")
 
