@@ -22,7 +22,7 @@ def send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,po
     if text_category == 'daily':
         
         if population == 'test':
-            subject = "Your Daily Chatbot Survey"
+            subject = "Your Daily Stress Survey"
             url = f"https://stanforduniversity.qualtrics.com/jfe/form/SV_aaWggWWTJZ5IYN7?snb={survey_number}&rdate={send_datetime}&hid={hashed_id}"
         else:
             subject = "Your Daily Stress Survey"
@@ -35,10 +35,10 @@ def send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,po
 
         
         if population == 'test':
-            subject = "Your Weekly Chatbot Survey"
+            subject = "Your Weekly Stress Survey"
             url = f"https://stanforduniversity.qualtrics.com/jfe/form/SV_elhTKO1aePDsqAl?snb={survey_number}&rdate={send_datetime}&hid={hashed_id}"
         else:
-            subject = "Your Weekly Chatbot Survey"
+            subject = "Your Weekly Stress Survey"
             url = f"https://stanforduniversity.qualtrics.com/jfe/form/SV_6gmpusDDaeCxfp3?snb={survey_number}&rdate={send_datetime}&hid={hashed_id}"
         f=codecs.open("email_views/weekly.html", 'r')
         html = f.read().format(**locals())
@@ -46,7 +46,7 @@ def send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,po
     elif text_category == 'final':
         
         if population == 'test':
-            subject = "Post-Chatbot Study Survey"
+            subject = "Post Stress Study Survey"
             url = f"https://stanforduniversity.qualtrics.com/jfe/form/SV_eJRT1I19FFCgDAh?rdate={send_datetime}&hid={hashed_id}" 
         else:
             
@@ -59,7 +59,7 @@ def send_qualtrics_email(receiver_email,text_category,survey_number,hashed_id,po
     elif text_category== 'unsubscribed':
 
         if population == 'test':
-            subject = "Unsubscribed from Chatbot Study"
+            subject = "Unsubscribed from Stress Study"
             url = f"https://stanforduniversity.qualtrics.com/jfe/form/SV_eJRT1I19FFCgDAh?rdate={send_datetime}&hid={hashed_id}" 
         else:
             

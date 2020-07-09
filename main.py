@@ -132,7 +132,7 @@ if __name__ == "__main__":
 
   STUDY_DURATION_DAYS = 8
   DATA_PATH = "data/participants.pkl"
-  TEMP_QUALTRICS_DATA = "qualtrics_survey/PopBots - Pre-Study Survey.csv"
+  TEMP_QUALTRICS_DATA = "qualtrics_survey/PopBots July 2020 Pilot - Pre-Study Survey.csv"
 
   participants = fetch_update_participants() # initializes the participants
   last_participant_update = datetime.datetime.now()
