@@ -82,7 +82,7 @@ def fetch_update_participants():
   surveys = pandas.read_csv(TEMP_QUALTRICS_DATA)
   surveys = surveys.loc[2:] # only take data from row 2 
   surveys = surveys[surveys['Finished']=='1'] # only consider surveys which are completed
-  surveys = surveys[surveys['Q1'] == "YES, I consent."]
+  surveys = surveys[surveys['Q1'] == "I agree."]
 
   for index,response in surveys.iterrows():
 
