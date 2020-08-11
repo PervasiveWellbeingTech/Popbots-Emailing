@@ -28,8 +28,10 @@ class PARTICIPANT:
     self.hashed_subject_id = hashed_subject_id
     self.hashed_email = hashed_email
     self.time_zone = time_zone
-    self.last_daily_date = enrollment_date.replace(hour=20, minute=0, second=0, microsecond=0) # pretending it was sent the first day at 8pm
-    self.last_weekly_date = enrollment_date.replace(hour=20, minute=0, second=0, microsecond=0) # pretending it was sent the first day at 8pm
+    ltz = pytz.timezone(time_zone)
+    ltz_enrollment_date = (enrollment_date.astimezone(ltz)).replace(hour=20, minute=0, second=0, microsecond=0)
+    self.last_daily_date = ltz_enrollment_date.astimezone('UTC') # pretending it was sent the first day at 8pm
+    self.last_weekly_date = ltz_enrollment_date.astimezone('UTC')  # pretending it was sent the first day at 8pm
     self.population = population
 
     self.nb_sent_daily = 0
@@ -91,6 +93,8 @@ def fetch_update_participants():
     if esID not in list(participants.keys()):
 
       enrollment_date = datetime.datetime.strptime(response['EndDate'],"%Y-%m-%d %H:%M:%S")
+      localtz = pytz.timezone(response.get(key='INATZ',default='UTC'))
+
       participants[esID] = PARTICIPANT(enrollment_date,esID,encrypt(response['Q21']),response['INATZ'],response.get(key='population',default='control'))
       participant_df.loc[esID.decode("utf-8"),str(enrollment_date.date())] = "ENROLLED" 
 
