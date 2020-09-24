@@ -1,3 +1,16 @@
+#   Copyright 2020 Stanford University
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
 import os
 import traceback
 import pickle
@@ -79,9 +92,9 @@ def fetch_update_participants():
   else:
     participants = {}
   
-  qualtrics.main(logger) #fetching the surveys from qualtrics
+  qualtrics.main(logger) #fetching the surveys from qualtrics and putting it in the TEMP_QUALTRICS_DATA path
 
-  surveys = pandas.read_csv(TEMP_QUALTRICS_DATA)
+  surveys = pandas.read_csv(TEMP_QUALTRICS_DATA) # reading the downloaded survey from the TEMP_QUALTRICS_DATA
   surveys = surveys.loc[2:] # only take data from row 2 
   surveys = surveys[surveys['Finished']=='1'] # only consider surveys which are completed
   surveys = surveys[surveys['Q1'] == "I agree."]
@@ -136,7 +149,12 @@ if __name__ == "__main__":
 
   STUDY_DURATION_DAYS = 8
   DATA_PATH = "data/participants.pkl"
-  TEMP_QUALTRICS_DATA = "qualtrics_survey/PopBots July 2020 Pilot - Pre-Study Survey.csv"
+
+  #create the data directory
+  if not os.path.exists('data'):
+    os.mkdir('data')
+
+  TEMP_QUALTRICS_DATA = "qualtrics_survey/PopBots July 2020 Pilot - Pre-Study Survey.csv" #name of the registration survey 
 
   participants = fetch_update_participants() # initializes the participants
   last_participant_update = datetime.datetime.now()
@@ -147,9 +165,9 @@ if __name__ == "__main__":
     
     try:
 
-      #1 retrieve all new possible users
+      #1 retrieve all new possible users every 1200 seconds/ 20 mins
 
-      if (datetime.datetime.now() - last_participant_update).seconds > 1200:
+      if (datetime.datetime.now() - last_participant_update).seconds > 1200: 
         todays_loc = participant_df.columns.get_loc(str(datetime.datetime.now().date()))
         print(participant_df.iloc[:,todays_loc-4:todays_loc])
         logger.info('Participants dict updated and saved')
