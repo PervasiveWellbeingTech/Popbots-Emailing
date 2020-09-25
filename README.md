@@ -37,22 +37,16 @@ EMAILING_HASHING_KEY #this is a key that you set yourself to hash the user's dat
 #gmail credentials, your google account must be set on lower security
 GMAIL_ADDRESS  
 GMAIL_PASSWORD 
-
 ```
 
+## These are recommendations to adapt this code to any project
 
-Adapt the survey variables in the in the fetch_update_participants()
-
-    This is to populate the PARTICIPANT class.  
-    
-    Note: you must update the participant class if you need to add more info for participant
-
-
-These are recommendations to adapt this code to any project
 
 * Change the study duration variable : STUDY_DURATION_DAYS in days to fit your experiment length
 
-* 
+* Adapt the qualtrics (to store) survey variables in the in the fetch_update_participants() function. This function creates all the PARTICIPANT class instances and store them in a pickle file locally.  ( You may want to edit the code to push this to a database)
+ 
+Note: you must update the participant class if you need to add more info for participant 
 
 ## Requirements in Qualtrics Survey:
 
