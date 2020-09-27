@@ -2,3 +2,6 @@
 logs/
 data/
 __pycache__/
+__pycache__
+qualtrics_survey/
+data/
