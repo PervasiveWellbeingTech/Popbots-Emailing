@@ -41,8 +41,13 @@ GMAIL_PASSWORD
 
 ## These are recommendations to adapt this code to any project
 
+* Disable the server.sendemail instruction while testing. This is to make sure you won't accidentally send bad emails, or 10000 emails due to a loop
 
 * Change the study duration variable : STUDY_DURATION_DAYS in days to fit your experiment length
+
+* Change the email templates in the email_views folder
+
+* Edit the emails directory, type, embedded variables 
 
 * Adapt the qualtrics (to store) survey variables in the in the fetch_update_participants() function. This function creates all the PARTICIPANT class instances and store them in a pickle file locally.  ( You may want to edit the code to push this to a database)
  
